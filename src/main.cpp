@@ -3,7 +3,14 @@
 #include <random>
 #include <chrono>
 
+// #define CBLAS
+#ifdef CBLAS
 #include <cblas.h>
+#else
+// Fortran Interface
+//  https://github.com/xianyi/OpenBLAS/wiki/User-Manual#call-blas-fortran-interface
+extern "C" void dgemm_(char*, char*, int*, int*,int*, double*, double*, int*, double*, int*, double*, double*, int*);
+#endif
 
 // C = AB
 int main()
@@ -36,18 +43,35 @@ int main()
 	}
 	std::fill_n(C.get(), N_C*M_C, 0);
 
-	constexpr auto ORDER = ::CblasRowMajor;
-	constexpr auto TRANS_A = ::CblasNoTrans;
-	constexpr auto TRANS_B = ::CblasNoTrans;
 	constexpr auto ALPHA = double(1);
 	constexpr auto BETA = double(0);
 
 	std::cout << N_A << "x" << M_A << " * " << N_B << "x" << M_B << std::endl;
 	const auto begin = std::chrono::system_clock::now();
-	::cblas_dgemm(ORDER, TRANS_A, TRANS_B, N, M, L, ALPHA,
+#ifdef CBLAS
+	constexpr auto ORDER = ::CblasRowMajor;
+	constexpr auto TRANS_A = ::CblasNoTrans;
+	constexpr auto TRANS_B = ::CblasNoTrans;
+	::dgemm_(ORDER, TRANS_A, TRANS_B, N, M, L, ALPHA,
 		A.get(), M_A,
 		B.get(), M_B, BETA,
 		C.get(), M_C);
+#else
+	char transa = 'T'; // 行優先
+	char transb = 'T'; // 行優先
+	int m = N;
+	int n = M;
+	int k = L;
+	double alpha = ALPHA;
+	double beta = BETA;
+	int lda = M_A;
+	int ldb = M_B;
+	int ldc = N_C;
+	::dgemm_(&transa, &transb, &m, &n, &k, &alpha,
+		A.get(), &lda,
+		B.get(), &ldb, &beta,
+		C.get(), &ldc);
+#endif
 	const auto end = std::chrono::system_clock::now();
 	const auto us = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
 	const auto gflops = N*(2*M - 1)*L / us * 1e-3;
