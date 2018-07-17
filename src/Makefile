@@ -1,7 +1,7 @@
 COMPILER = clang++
 CFLAGS   = -g -MMD -MP -O3 -std=c++14 -stdlib=libc++ -Wall -Wextra -Werror -Wfatal-errors -Wno-unknown-pragmas -march=native -mtune=native -fopenmp
-LDFLAGS  = ${CFLAGS}
-LIBS     = /usr/lib/libopenblas.a
+LDFLAGS  = ${CFLAGS} -lblas
+LIBS     =
 INCLUDE  =
 TARGET   = ./$(shell basename `readlink -f ..`)
 OBJDIR   = ./obj
