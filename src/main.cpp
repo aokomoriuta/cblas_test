@@ -3,7 +3,7 @@
 #include <random>
 #include <chrono>
 
-// #define CBLAS
+#define CBLAS
 #ifdef CBLAS
 #include <cblas.h>
 #else
@@ -52,7 +52,7 @@ int main()
 	constexpr auto ORDER = ::CblasRowMajor;
 	constexpr auto TRANS_A = ::CblasNoTrans;
 	constexpr auto TRANS_B = ::CblasNoTrans;
-	::dgemm_(ORDER, TRANS_A, TRANS_B, N, M, L, ALPHA,
+	::cblas_dgemm(ORDER, TRANS_A, TRANS_B, N, M, L, ALPHA,
 		A.get(), M_A,
 		B.get(), M_B, BETA,
 		C.get(), M_C);
